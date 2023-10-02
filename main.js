@@ -3,8 +3,26 @@ const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
 const toggleAllEl = document.getElementById('toggle-all');
 const clearCompletedEl = document.getElementById('clear-completed');
+const changeThemeEl = document.getElementById('change-theme');
+
+
+function setDarkTheme() {
+  localStorage.setItem('theme', 'dark');
+  changeThemeEl.innerHTML = `
+      <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+    `;
+}
+
+const theme = localStorage.getItem('theme');
+if (theme === 'dark') {
+  document.documentElement.classList.add('dark');
+  setDarkTheme()
+}
 
 let TODOS = sessionStorage.getItem('todos') ? JSON.parse(sessionStorage.getItem('todos')) : [];
+
+
+
 
 function createTodoItemEl(todo) {
   const li = document.createElement('li')
@@ -123,9 +141,22 @@ listEl.onkeydown = (e) => {
   }
 }
 
+changeThemeEl.onclick = (e) => {
+  document.documentElement.classList.toggle('dark');
+  if(document.documentElement.classList.contains('dark')) {
+    setDarkTheme()
+  } else {
+    changeThemeEl.innerHTML = `
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    `;
+    localStorage.setItem('theme', 'light');
+  }
+}
+
 
 window.addEventListener('hashchange', () => {
   renderTodos();
 });
 
 renderTodos()
+
