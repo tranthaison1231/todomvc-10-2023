@@ -1,4 +1,4 @@
-const inputEl = document.getElementById("input")
+const inputEl = document.getElementById("input") as HTMLInputElement
 const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
 const toggleAllEl = document.getElementById('toggle-all');
@@ -8,7 +8,7 @@ const changeThemeEl = document.getElementById('change-theme');
 
 function setDarkTheme() {
   localStorage.setItem('theme', 'dark');
-  changeThemeEl.innerHTML = `
+  changeThemeEl!.innerHTML = `
       <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
     `;
 }
@@ -18,15 +18,18 @@ if (theme === 'dark') {
   document.documentElement.classList.add('dark');
   setDarkTheme()
 }
+interface Todo {
+  id: number;
+  value: string;
+  checked: boolean;
+}
 
-let TODOS = sessionStorage.getItem('todos') ? JSON.parse(sessionStorage.getItem('todos')) : [];
+let TODOS: Todo[] = sessionStorage.getItem('todos') ? JSON.parse(sessionStorage.getItem('todos')!) : [];
 
 
-
-
-function createTodoItemEl(todo) {
+function createTodoItemEl(todo: Todo) {
   const li = document.createElement('li')
-  li.dataset.id = todo.id
+  li.dataset.id = String(todo.id)
   li.className = 'group border-b flex justify-between border-b-gray-300 p-4'
   li.insertAdjacentHTML(
     'afterbegin',
@@ -56,14 +59,14 @@ function renderTodos() {
   let filterTodos = [...TODOS];
   if (filter === 'active') filterTodos = TODOS.filter(todo => !todo.checked)
   else if (filter === 'completed') filterTodos = TODOS.filter((todo) => todo.checked);
-  listEl.replaceChildren(...filterTodos.map((todo) => createTodoItemEl(todo))); 
+  listEl!.replaceChildren(...filterTodos.map((todo) => createTodoItemEl(todo))); 
   let check = 0;
   TODOS.forEach((item) => {
     if (item.checked) {
       check++;
     }
   });
-  countEl.innerText = TODOS.length - check;
+  countEl.innerText = String(TODOS.length - check);
   if (check === TODOS.length && TODOS.length !== 0) {
     toggleAllEl.classList.add('text-black', 'cursor-pointer');
   } else {
@@ -75,7 +78,7 @@ function renderTodos() {
   }
 }
 
-clearCompletedEl.onclick = (e) => {
+clearCompletedEl.onclick = () => {
   TODOS = TODOS.filter(item => !item.checked);
   sessionStorage.setItem('todos', JSON.stringify(TODOS));
   renderTodos()
@@ -83,8 +86,9 @@ clearCompletedEl.onclick = (e) => {
 
 
 toggleAllEl.onclick = (e) => {
-  if (e.target.classList.contains('text-black')) {
-    TODOS.forEach(item => item.checked = false);
+  const target = e.target as HTMLButtonElement;
+  if (target.classList.contains('text-black')) {
+    TODOS.forEach((item) => (item.checked = false));
   }
   sessionStorage.setItem('todos', JSON.stringify(TODOS));
   renderTodos()
@@ -106,8 +110,9 @@ inputEl.onkeyup = (e) => {
 }
 
 listEl.onclick = (e) => {
-  if (e.target.getAttribute('data-todo') === 'toggle') {
-    const id = parseInt(e.target.parentElement.parentElement.dataset.id);
+  const target = e.target as HTMLLIElement;
+  if (target.getAttribute('data-todo') === 'toggle') {
+    const id = parseInt(target.parentElement.parentElement.dataset.id);
     TODOS = TODOS.map(item => {
       if (item.id === id) {
         item.checked = !item.checked;
@@ -117,21 +122,22 @@ listEl.onclick = (e) => {
     sessionStorage.setItem('todos', JSON.stringify(TODOS));
     renderTodos();
   }
-  if (e.target.getAttribute('data-todo') === 'delete') {
-    TODOS = TODOS.filter(item => item.id !== parseInt(e.target.parentElement.dataset.id));
+  if (target.getAttribute('data-todo') === 'delete') {
+    TODOS = TODOS.filter(item => item.id !== parseInt(target.parentElement.dataset.id));
     sessionStorage.setItem('todos', JSON.stringify(TODOS));
     renderTodos();
   }
 };
 
-listEl.onkeydown = (e) => {
+listEl.onkeydown = (e: KeyboardEvent) => {
+  const target = e.target as HTMLLIElement;
   if (e.keyCode === 13) {
     e.preventDefault();
-    if (e.target.getAttribute('data-todo') === 'value') {
-      const id = parseInt(e.target.parentElement.parentElement.dataset.id);
+    if (target.getAttribute('data-todo') === 'value') {
+      const id = parseInt(target.parentElement.parentElement.dataset.id);
       TODOS = TODOS.map((item) => {
         if (item.id === id) {
-          item.value = e.target.innerText;
+          item.value = target.innerText;
         }
         return item;
       });
@@ -141,12 +147,12 @@ listEl.onkeydown = (e) => {
   }
 }
 
-changeThemeEl.onclick = (e) => {
+changeThemeEl!.onclick = () => {
   document.documentElement.classList.toggle('dark');
   if(document.documentElement.classList.contains('dark')) {
     setDarkTheme()
   } else {
-    changeThemeEl.innerHTML = `
+    changeThemeEl!.innerHTML = `
       <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
     `;
     localStorage.setItem('theme', 'light');
@@ -159,4 +165,6 @@ window.addEventListener('hashchange', () => {
 });
 
 renderTodos()
+
+
 
