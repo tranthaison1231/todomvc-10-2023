@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 const inputEl = document.getElementById('input') as HTMLInputElement
 const listEl = document.getElementById('list')
 const countEl = document.getElementById('count')
@@ -19,13 +20,60 @@ if (theme === 'dark') {
 }
 
 type Todo = {
-  id: number
+  id: string
   value: string
   checked: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-let todos: Todo[] = sessionStorage.getItem('todos') ? JSON.parse(sessionStorage.getItem('todos')!) : []
+let todos: Todo[] = []
+
+async function getTodos() {
+  const res = await fetch('https://650446efc8869921ae24cc6d.mockapi.io/todos')
+  todos = (await res.json()) as Todo[]
+  renderTodos()
+}
+
+async function updateTodo(id: string, todo: Partial<Todo>) {
+  try {
+    const res = await fetch(`https://650446efc8869921ae24cc6d.mockapi.io/todos/${id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(todo)
+    })
+    const updatedTodo = (await res.json()) as Todo
+    todos = todos.map(todo => (todo.id === id ? updatedTodo : todo))
+    renderTodos()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function deleteTodo(id: string) {
+  try {
+    await fetch(`https://650446efc8869921ae24cc6d.mockapi.io/todos/${id}`, {
+      method: 'DELETE'
+    })
+    todos = todos.filter(todo => todo.id !== id)
+    renderTodos()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function createTodo(todo: Partial<Todo>) {
+  try {
+    const res = await fetch(`https://650446efc8869921ae24cc6d.mockapi.io/todos`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(todo)
+    })
+    const newTodo = (await res.json()) as Todo
+    todos.push(newTodo)
+    renderTodos()
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 function createTodoItemEl(todo: Todo) {
   const li = document.createElement('li')
@@ -33,8 +81,7 @@ function createTodoItemEl(todo: Todo) {
   li.className = 'group border-b flex justify-between border-b-gray-300 p-4'
   li.insertAdjacentHTML(
     'afterbegin',
-    `
-      <div class="flex gap-3 items-center" >
+    `<div class="flex gap-3 items-center" >
         <svg data-todo="toggle" class="${
           todo.checked ? 'text-green-500' : ''
         }" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle">
@@ -85,7 +132,6 @@ function renderTodos() {
 
 clearCompletedEl!.onclick = () => {
   todos = todos.filter(item => !item.checked)
-  sessionStorage.setItem('todos', JSON.stringify(todos))
   renderTodos()
 }
 
@@ -97,19 +143,15 @@ toggleAllEl!.onclick = e => {
     })
   }
 
-  sessionStorage.setItem('todos', JSON.stringify(todos))
   renderTodos()
 }
 
-inputEl.onkeyup = e => {
+inputEl.onkeyup = async e => {
   if (e.key === 'Enter') {
-    todos.push({
-      id: Date.now(),
+    await createTodo({
       value: inputEl.value,
       checked: false
     })
-    sessionStorage.setItem('todos', JSON.stringify(todos))
-    renderTodos()
     inputEl.value = ''
   }
 }
@@ -117,22 +159,16 @@ inputEl.onkeyup = e => {
 listEl!.onclick = e => {
   const target = e.target as HTMLLIElement
   if (target.getAttribute('data-todo') === 'toggle') {
-    const id = parseInt(target.parentElement!.parentElement!.dataset.id!)
-    todos = todos.map(item => {
-      if (item.id === id) {
-        item.checked = !item.checked
-      }
-
-      return item
+    const id = target.parentElement!.parentElement!.dataset.id!
+    const newTodo = todos.find(item => item.id === id)
+    updateTodo(id, {
+      checked: !newTodo!.checked
     })
-    sessionStorage.setItem('todos', JSON.stringify(todos))
-    renderTodos()
   }
 
   if (target.getAttribute('data-todo') === 'delete') {
-    todos = todos.filter(item => item.id !== parseInt(target.parentElement!.dataset.id!))
-    sessionStorage.setItem('todos', JSON.stringify(todos))
-    renderTodos()
+    const id = target.parentElement!.dataset.id!
+    deleteTodo(id)
   }
 }
 
@@ -141,16 +177,10 @@ listEl!.onkeydown = (e: KeyboardEvent) => {
   if (e.keyCode === 13) {
     e.preventDefault()
     if (target.getAttribute('data-todo') === 'value') {
-      const id = parseInt(target.parentElement!.parentElement!.dataset.id!)
-      todos = todos.map(item => {
-        if (item.id === id) {
-          item.value = target.innerText
-        }
-
-        return item
+      const id = target.parentElement!.parentElement!.dataset.id!
+      updateTodo(id, {
+        value: target.innerText
       })
-      sessionStorage.setItem('todos', JSON.stringify(todos))
-      renderTodos()
     }
   }
 }
@@ -171,4 +201,4 @@ window.addEventListener('hashchange', () => {
   renderTodos()
 })
 
-renderTodos()
+getTodos()
