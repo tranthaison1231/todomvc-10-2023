@@ -1,8 +1,14 @@
-export default function Footer() {
+type FooterProps = {
+  leftTotal: number
+  canClearCompleted: boolean
+  clearCompleted: () => void
+}
+
+export default function Footer({ leftTotal, canClearCompleted, clearCompleted }: FooterProps) {
   return (
     <footer className="footer flex justify-between border-t border-t-gray-300 p-4">
       <div>
-        <span id="count">0</span> item left
+        <span id="count">{leftTotal}</span> item left
       </div>
       <div className="flex items-center gap-2">
         <a href="#/" className="inline-block cursor-pointer p-1 hover:border hover:border-red-500">
@@ -15,9 +21,9 @@ export default function Footer() {
           Completed
         </a>
       </div>
-      <div id="clear-completed" className="invisible cursor-pointer hover:underline">
+      <button className={`hover:underline ${canClearCompleted ? 'visible' : 'invisible'}`} onClick={clearCompleted}>
         Clear completed
-      </div>
+      </button>
     </footer>
   )
 }

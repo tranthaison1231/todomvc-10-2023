@@ -4,15 +4,17 @@ export type Todo = {
   checked: boolean
 }
 
+const apiUrl = 'https://650446efc8869921ae24cc6d.mockapi.io'
+
 export async function getTodos() {
-  const res = await fetch('https://650446efc8869921ae24cc6d.mockapi.io/todos')
+  const res = await fetch(`${apiUrl}/todos`)
   const todos = (await res.json()) as Todo[]
   return todos
 }
 
 export async function updateTodo(id: string, todo: Partial<Todo>) {
   try {
-    const res = await fetch(`https://650446efc8869921ae24cc6d.mockapi.io/todos/${id}`, {
+    const res = await fetch(`${apiUrl}/todos/${id}`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(todo)
@@ -26,7 +28,7 @@ export async function updateTodo(id: string, todo: Partial<Todo>) {
 
 export async function deleteTodo(id: string) {
   try {
-    await fetch(`https://650446efc8869921ae24cc6d.mockapi.io/todos/${id}`, {
+    await fetch(`${apiUrl}/todos/${id}`, {
       method: 'DELETE'
     })
   } catch (error) {
@@ -36,7 +38,7 @@ export async function deleteTodo(id: string) {
 
 export async function createTodo(todo: Partial<Todo>) {
   try {
-    const res = await fetch(`https://650446efc8869921ae24cc6d.mockapi.io/todos`, {
+    const res = await fetch(`${apiUrl}/todos`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(todo)
